@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mody Chat Pro - واتساب الويب الرسمي</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #00a884; height: 100vh; display: flex; justify-content: center; align-items: center; background-image: linear-gradient(to bottom, #00a884 130px, #dadbd4 130px); }
+        .app-container { width: 100%; max-width: 1050px; height: 95vh; background: #f0f2f5; border-radius: 8px; box-shadow: 0 6px 18px rgba(0,0,0,0.2); display: flex; overflow: hidden; }
+        .hidden { display: none !important; }
+        
+        /* شاشة تسجيل الدخول المروقة */
+        #auth-screen { width: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; background: #f0f2f5; }
+        .auth-box { background: white; padding: 40px 30px; border-radius: 10px; width: 100%; max-width: 420px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); text-align: center; }
+        .auth-box h2 { color: #008069; margin-bottom: 25px; font-size: 24px; }
+        input[type="text"], input[type="email"], input[type="password"] { width: 100%; padding: 12px 15px; margin: 10px 0; border: 1px solid #e1e2e5; border-radius: 8px; font-size: 15px; outline: none; transition: 0.3s; }
+        input:focus { border-color: #008069; box-shadow: 0 0 5px rgba(0,128,105,0.2); }
+        .avatar-upload { margin: 15px 0; text-align: right; font-size: 14px; color: #555; background: #f9f9f9; padding: 10px; border-radius: 8px; border: 1px dashed #ccc; }
+        button { width: 100%; padding: 12px; margin-top: 15px; background: #008069; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        button:hover { background: #006e5a; }
+        .switch-link { display: block; margin-top: 20px; color: #008069; cursor: pointer; font-size: 14px; font-weight: 600; }
+
+        /* الشاشة الرئيسية للشات */
+        #main-screen { width: 100%; display: flex; height: 100%; }
+        
+        /* القائمة الجانبية */
+        .sidebar { width: 38%; border-left: 1px solid #e9edef; display: flex; flex-direction: column; background: #fff; }
+        .sidebar-header { background: #f0f2f5; padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e9edef; }
+        .my-profile { display: flex; align-items: center; gap: 12px; }
+        .avatar { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; background: #ccc; }
+        
+        .search-container { padding: 8px 12px; background: #fff; border-bottom: 1px solid #f0f2f5; }
+        .search-container input { width: 100%; margin: 0; padding: 8px 14px; background: #f0f2f5; border: none; border-radius: 20px; font-size: 14px; outline: none; }
+        
+        .users-list { flex: 1; overflow-y: auto; background: #ffffff; }
+        .user-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid #f5f6f6; cursor: pointer; transition: 0.2s; }
+        .user-item:hover, .user-item.active { background: #f0f2f5; }
+        .user-item-info h4 { font-size: 16px; color: #111b21; font-weight: 500; }
+        .user-item-info p { font-size: 13px; color: #667781; margin-top: 3px; }
+
+        /* منطقة المحادثة */
+        .chat-area { width: 62%; display: flex; flex-direction: column; background: #efeae2; position: relative; background-image: radial-gradient(#d1d7db 1px, transparent 1px); background-size: 20px 20px; }
+        .chat-header { background: #f0f2f5; padding: 10px 16px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #e9edef; }
+        .messages-box { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+        .empty-chat { flex: 1; display: flex; justify-content: center; align-items: center; color: #667781; font-size: 17px; background: #f8f9fa; }
+        
+        /* فقاعات الرسايل الروقان */
+        .msg { max-width: 65%; padding: 8px 12px; border-radius: 8px; font-size: 14px; line-height: 1.4; position: relative; word-wrap: break-word; box-shadow: 0 1px 0.5px rgba(0,0,0,0.13); }
+        .msg.me { background: #d9fdd3; align-self: flex-end; border-top-left-radius: 0; }
+        .msg.other { background: #ffffff; align-self: flex-start; border-top-right-radius: 0; }
+        .msg img { max-width: 100%; border-radius: 6px; margin-top: 4px; display: block; }
+        .msg audio { max-width: 230px; height: 35px; margin-top: 4px; }
+        .msg a.doc-link { display: inline-block; background: rgba(0,0,0,0.05); padding: 8px 12px; border-radius: 6px; color: #008069; text-decoration: none; font-weight: bold; margin-top: 4px; }
+
+        /* شريط الكتابة والمرفقات */
+        .chat-footer { background: #f0f2f5; padding: 10px 16px; display: flex; align-items: center; gap: 10px; }
+        .icon-btn { width: auto; padding: 8px; margin: 0; background: transparent; color: #54656f; font-size: 20px; border-radius: 50%; border: none; cursor: pointer; }
+        .icon-btn:hover { background: rgba(0,0,0,0.05); }
+        .recording { color: #e53935 !important; animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+        .chat-footer input[type="text"] { flex: 1; margin: 0; border: none; border-radius: 20px; padding: 10px 16px; outline: none; background: #fff; font-size: 15px; }
+        .send-btn { width: auto; margin: 0; padding: 10px 20px; border-radius: 20px; background: #008069; }
+
+        @media (max-width: 768px) {
+            body { background-image: none; background-color: #fff; }
+            .app-container { height: 100vh; max-width: 100%; border-radius: 0; }
+            .sidebar { width: 100%; }
+            .chat-area { width: 100%; display: none; }
+            .app-container.in-chat .sidebar { display: none; }
+            .app-container.in-chat .chat-area { display: flex; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container" id="app-container">
+    <div id="auth-screen">
+        <div class="auth-box">
+            <h2 id="auth-title">تسجيل الدخول - Mody Chat</h2>
+            <div id="signup-fields" class="hidden">
+                <input type="text" id="reg-name" placeholder="اسمك الكامل (اللي هيظهر للناس)">
+                <div class="avatar-upload">
+                    <label>اختر صورتك الشخصية:</label>
+                    <input type="file" id="reg-avatar" accept="image/*">
+                </div>
+            </div>
+            <input type="email" id="auth-email" placeholder="البريد الإلكتروني">
+            <input type="password" id="auth-pass" placeholder="كلمة المرور (6 أرقام أو حروف على الأقل)">
+            <button id="auth-submit">دخول</button>
+            <span class="switch-link" id="toggle-auth">معندكش حساب؟ سجل حساب جديد وحط صورتك</span>
+        </div>
+    </div>
+
+    <div id="main-screen" class="hidden">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="my-profile">
+                    <img id="my-avatar" class="avatar" src="https://via.placeholder.com/45" alt="صورة">
+                    <strong id="my-name">مستخدم</strong>
+                </div>
+                <button id="logout-btn" style="width:auto; padding:6px 12px; margin:0; background:#dc3545; font-size:13px;">خروج</button>
+            </div>
+            
+            <div class="search-container">
+                <input type="text" id="search-user" placeholder="🔍 ابحث بالاسم أو الإيميل عن أي شخص...">
+            </div>
+
+            <div class="users-list" id="users-list"></div>
+        </div>
+
+        <div class="chat-area">
+            <div id="no-chat-selected" class="empty-chat">
+                اختر أي شخص من القائمة للبدء في مراسلته 💬
+            </div>
+
+            <div id="active-chat" class="hidden" style="display:flex; flex-direction:column; height:100%;">
+                <div class="chat-header">
+                    <button id="back-btn" class="icon-btn" style="font-size:16px;">🔙</button>
+                    <img id="chat-user-avatar" class="avatar" src="" alt="">
+                    <div>
+                        <h4 id="chat-user-name">اسم الشخص</h4>
+                        <small id="chat-user-email" style="color:#667781;"></small>
+                    </div>
+                </div>
+
+                <div class="messages-box" id="messages-box"></div>
+
+                <div class="chat-footer">
+                    <input type="file" id="file-input" class="hidden">
+                    <button class="icon-btn" id="attach-btn" title="إرسال صورة أو مستند">📎</button>
+                    <button class="icon-btn" id="mic-btn" title="تسجيل رسالة صوتية">🎤</button>
+                    <input type="text" id="msg-input" placeholder="اكتب رسالة...">
+                    <button class="send-btn" id="send-btn">إرسال</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAh4oW4towcE7M5W1uivzTf23rr5h7u7i0",
+            authDomain: "mody-chat-27465.firebaseapp.com",
+            projectId: "mody-chat-27465",
+            storageBucket: "mody-chat-27465.firebasestorage.app",
+            messagingSenderId: "227409568699",
+            appId: "1:227409568699:web:a9f9a3c058443738259a9e",
+            measurementId: "G-NP1YFYRKY8"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const storage = getStorage(app);
+
+        let isRegister = false;
+        let currentUserData = null;
+        let selectedUser = null;
+        let allUsers = [];
+        let unsubscribeMessages = null;
+
+        const authScreen = document.getElementById('auth-screen');
+        const mainScreen = document.getElementById('main-screen');
+        const signupFields = document.getElementById('signup-fields');
+        const authTitle = document.getElementById('auth-title');
+        const authSubmit = document.getElementById('auth-submit');
+        const toggleAuth = document.getElementById('toggle-auth');
+
+        toggleAuth.onclick = () => {
+            isRegister = !isRegister;
+            signupFields.classList.toggle('hidden', !isRegister);
+            authTitle.textContent = isRegister ? 'إنشاء حساب جديد' : 'تسجيل الدخول - Mody Chat';
+            authSubmit.textContent = isRegister ? 'تسجيل الحساب' : 'دخول';
+            toggleAuth.textContent = isRegister ? 'عندك حساب بالفعل؟ سجل دخول' : 'معندكش حساب؟ سجل حساب جديد وحط صورتك';
+        };
+
+        authSubmit.onclick = async () => {
+            const email = document.getElementById('auth-email').value.trim();
+            const pass = document.getElementById('auth-pass').value;
+            if (!email || !pass) return alert('اكتب الإيميل والباسورد');
+
+            authSubmit.disabled = true;
+            authSubmit.textContent = 'جاري التحميل...';
+
+            try {
+                if (isRegister) {
+                    const name = document.getElementById('reg-name').value.trim();
+                    const avatarFile = document.getElementById('reg-avatar').files[0];
+                    if (!name) throw new Error('اكتب اسمك اللي هيظهر للناس');
+
+                    const cred = await createUserWithEmailAndPassword(auth, email, pass);
+                    let photoURL = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=008069&color=fff`;
+
+                    if (avatarFile) {
+                        const storageRef = ref(storage, `avatars/${cred.user.uid}`);
+                        await uploadBytes(storageRef, avatarFile);
+                        photoURL = await getDownloadURL(storageRef);
+                    }
+
+                    await setDoc(doc(db, "users", cred.user.uid), {
+                        uid: cred.user.uid,
+                        name: name,
+                        email: email,
+                        photoURL: photoURL
+                    });
+                } else {
+                    await signInWithEmailAndPassword(auth, email, pass);
+                }
+            } catch (err) {
+                alert('خطأ: ' + err.message);
+            } finally {
+                authSubmit.disabled = false;
+                authSubmit.textContent = isRegister ? 'تسجيل الحساب' : 'دخول';
+            }
+        };
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const userDoc = await getDoc(doc(db, "users", user.uid));
+                if (userDoc.exists()) {
+                    currentUserData = userDoc.data();
+                } else {
+                    currentUserData = { uid: user.uid, name: user.email.split('@')[0], email: user.email, photoURL: `https://ui-avatars.com/api/?name=User` };
+                    await setDoc(doc(db, "users", user.uid), currentUserData);
+                }
+                document.getElementById('my-name').textContent = currentUserData.name;
+                document.getElementById('my-avatar').src = currentUserData.photoURL;
+                authScreen.classList.add('hidden');
+                mainScreen.classList.remove('hidden');
+                loadUsers();
+            } else {
+                authScreen.classList.remove('hidden');
+                mainScreen.classList.add('hidden');
+            }
+        });
+
+        document.getElementById('logout-btn').onclick = () => signOut(auth);
+
+        function loadUsers() {
+            onSnapshot(collection(db, "users"), (snapshot) => {
+                allUsers = [];
+                snapshot.forEach(doc => {
+                    if (doc.id !== currentUserData.uid) {
+                        allUsers.push(doc.data());
+                    }
+                });
+                renderUsers(allUsers);
+            });
+        }
+
+        function renderUsers(users) {
+            const list = document.getElementById('users-list');
+            list.innerHTML = '';
+            users.forEach(u => {
+                const div = document.createElement('div');
+                div.className = `user-item ${selectedUser?.uid === u.uid ? 'active' : ''}`;
+                div.innerHTML = `
+                    <img class="avatar" src="${u.photoURL}" alt="">
+                    <div class="user-item-info">
+                        <h4>${u.name}</h4>
+                        <p>${u.email}</p>
+                    </div>
+                `;
+                div.onclick = () => openChat(u);
+                list.appendChild(div);
+            });
+        }
+
+        document.getElementById('search-user').oninput = (e) => {
+            const term = e.target.value.toLowerCase();
+            const filtered = allUsers.filter(u => u.name.toLowerCase().includes(term) || u.email.toLowerCase().includes(term));
+            renderUsers(filtered);
+        };
+
+        function openChat(user) {
+            selectedUser = user;
+            document.getElementById('app-container').classList.add('in-chat');
+            document.getElementById('no-chat-selected').classList.add('hidden');
+            document.getElementById('active-chat').classList.remove('hidden');
+            document.getElementById('chat-user-name').textContent = user.name;
+            document.getElementById('chat-user-email').textContent = user.email;
+            document.getElementById('chat-user-avatar').src = user.photoURL;
+
+            const chatId = [currentUserData.uid, user.uid].sort().join('_');
+            if (unsubscribeMessages) unsubscribeMessages();
+
+            const q = query(collection(db, "chats", chatId, "messages"), orderBy("createdAt", "asc"));
+            unsubscribeMessages = onSnapshot(q, (snap) => {
+                const box = document.getElementById('messages-box');
+                box.innerHTML = '';
+                snap.forEach(doc => {
+                    const m = doc.data();
+                    const div = document.createElement('div');
+                    div.className = `msg ${m.senderId === currentUserData.uid ? 'me' : 'other'}`;
+
+                    if (m.type === 'image') {
+                        div.innerHTML = `<img src="${m.fileUrl}" alt="صورة">`;
+                    } else if (m.type === 'audio') {
+                        div.innerHTML = `<audio controls src="${m.fileUrl}"></audio>`;
+                    } else if (m.type === 'file') {
+                        div.innerHTML = `<a class="doc-link" href="${m.fileUrl}" target="_blank">📄 ${m.fileName || 'مستند مرفق'}</a>`;
+                    } else {
+                        div.textContent = m.text;
+                    }
+                    box.appendChild(div);
+                });
+                box.scrollTop = box.scrollHeight;
+            });
+        }
+
+        document.getElementById('back-btn').onclick = () => {
+            document.getElementById('app-container').classList.remove('in-chat');
+        };
+
+        async function sendMessage(payload) {
+            if (!selectedUser) return;
+            const chatId = [currentUserData.uid, selectedUser.uid].sort().join('_');
+            await addDoc(collection(db, "chats", chatId, "messages"), {
+                senderId: currentUserData.uid,
+                createdAt: serverTimestamp(),
+                ...payload
+            });
+        }
+
+        document.getElementById('send-btn').onclick = async () => {
+            const input = document.getElementById('msg-input');
+            const text = input.value.trim();
+            if (!text) return;
+            input.value = '';
+            await sendMessage({ type: 'text', text });
+        };
+
+        document.getElementById('msg-input').onkeypress = (e) => {
+            if (e.key === 'Enter') document.getElementById('send-btn').click();
+        };
+
+        const fileInput = document.getElementById('file-input');
+        document.getElementById('attach-btn').onclick = () => fileInput.click();
+
+        fileInput.onchange = async (e) => {
+            const file = e.target.files[0];
+            if (!file || !selectedUser) return;
+
+            const fileRef = ref(storage, `chat_files/${Date.now()}_${file.name}`);
+            await uploadBytes(fileRef, file);
+            const url = await getDownloadURL(fileRef);
+
+            const isImage = file.type.startsWith('image/');
+            await sendMessage({
+                type: isImage ? 'image' : 'file',
+                fileUrl: url,
+                fileName: file.name
+            });
+            fileInput.value = '';
+        };
+
+        let mediaRecorder;
+        let audioChunks = [];
+        const micBtn = document.getElementById('mic-btn');
+
+        micBtn.onclick = async () => {
+            if (!mediaRecorder || mediaRecorder.state === 'inactive') {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+                    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+                    mediaRecorder.onstop = async () => {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                        const audioRef = ref(storage, `voice_notes/${Date.now()}.webm`);
+                        await uploadBytes(audioRef, audioBlob);
+                        const url = await getDownloadURL(audioRef);
+                        await sendMessage({ type: 'audio', fileUrl: url });
+                        stream.getTracks().forEach(t => t.stop());
+                    };
+                    mediaRecorder.start();
+                    micBtn.classList.add('recording');
+                    micBtn.textContent = '⏹️';
+                } catch (err) {
+                    alert('اسمح للمتصفح باستخدام الميكروفون لتسجيل الفويس');
+                }
+            } else {
+                mediaRecorder.stop();
+                micBtn.classList.remove('recording');
+                micBtn.textContent = '🎤';
+            }
+        };
+    </script>
+</body>
+</html>
